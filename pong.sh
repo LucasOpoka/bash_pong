@@ -5,9 +5,14 @@
 # Wheter game is running
 declare -i still_running=1
 
-# Get pong board size
+# Get pong grid size
 declare -i height=$(($(tput lines)-5))
 declare -i width=$(($(tput cols)-2))
+
+# Ensure width is even since ball width and horizontal speed are 2
+if (( width % 2 == 1 )); then
+width=$(($width-1))
+fi
 
 # General paddle variables
 paddle_height=10
@@ -20,7 +25,7 @@ declare -i new_paddle_x1=$paddle_x1
 declare -i paddle_y1=0
 
 # Right paddle variables
-declare -i paddle_x2=$(($height/2 - 2 + 10))
+declare -i paddle_x2=$(($height/2 - $paddle_height/2))
 declare -i new_paddle_x2=$paddle_x2
 declare -i paddle_y2=$(($width - 2))
 
@@ -32,6 +37,11 @@ ball_x=$(($height/2 - 2))
 ball_y=$(($width/2))
 delta_ball_x=-1
 delta_ball_y=2
+
+# Ensure starting ball col is even
+if (( ball_y % 2 == 1 )); then
+ball_y=$(($ball_y-1))
+fi
 
 # Internal field separator, how bash splits strings
 IFS=''
@@ -171,6 +181,7 @@ move_ball()
     # Check bounce from top or bottom
     if [ $next_ball_x -lt 0 ] || [ $next_ball_x -ge "$height" ]; then
         delta_ball_x=$(($delta_ball_x*-1))
+        next_ball_x=$(($ball_x + $delta_ball_x))
     fi
 
     # Check if ball went out of bounds or bounced of the paddles
@@ -178,12 +189,13 @@ move_ball()
         still_running=0
     elif $(detect_ball_x_paddle_colision $next_ball_x $next_ball_y); then
         delta_ball_y=$(($delta_ball_y*-1))
+        next_ball_y=$(($ball_y + $delta_ball_y))
     fi
 
     # If bounced move and redraw
     if [ $still_running -eq 1 ]; then
-        ball_x=$(($ball_x + $delta_ball_x))
-        ball_y=$(($ball_y + $delta_ball_y))
+        ball_x=$next_ball_x
+        ball_y=$next_ball_y
         draw_ball "$ball_x" "$ball_y" "$ball_color" "$no_color"
     fi
 }
