@@ -63,7 +63,7 @@ SIG_END=HUP
 # -------------------------------------------------- Functions section --------------------------------------------------
 init_game() {
     clear
-    echo -ne "\e[?25l"
+    printf "\e[?25l"
     stty -echo
     for ((i=0; i<height; i++)); do
         for ((j=0; j<width; j++)); do
@@ -74,7 +74,7 @@ init_game() {
 
 
 move_and_draw() {
-    echo -ne "\e[${1};${2}H$3"
+    printf "\e[${1};${2}H$3"
 }
 
 
@@ -119,12 +119,11 @@ draw_board() {
         move_and_draw 1 $i "$border_color-$no_color"
     done
     move_and_draw 1 $((width + 2)) "$border_color+$no_color"
-    echo
 
     for ((i=0; i<height; i++)); do
         move_and_draw $((i+2)) 1 "$border_color|$no_color"
-        eval echo -en "\"\${arr$i[*]}\""
-        echo -e "$border_color|$no_color"
+        eval printf "\"\${arr$i[*]}\""
+        printf "$border_color|$no_color"
     done
 
     move_and_draw $((height+2)) 1 "$border_color+$no_color"
@@ -132,7 +131,6 @@ draw_board() {
         move_and_draw $((height+2)) $i "$border_color-$no_color"
     done
     move_and_draw $((height+2)) $((width + 2)) "$border_color+$no_color"
-    echo
 }
 
 
@@ -251,7 +249,7 @@ game_loop()
 clear_game()
 {
     stty echo
-    echo -e "\e[?25h"
+    printf "\e[?25h"
 }
 
 
