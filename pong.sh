@@ -22,7 +22,7 @@ fi
 # General paddle variables
 paddle_height=10
 paddle_width=2
-paddle_speed=2
+paddle_step=2
 
 # Get paddles' start position
 paddle_start_x=$(($height/2 - $paddle_height/2))
@@ -45,8 +45,8 @@ declare -i  ball_height=1
 declare -i  ball_width=2
 declare -i  ball_x=$(($height/2 - 2))
 declare -i  ball_y=$(($width/2))
-declare -i  delta_ball_x=-1
-declare -i  delta_ball_y=2
+declare -i  ball_step_x=-1
+declare -i  ball_step_y=2
 
 # Ensure starting ball col is even
 if (( ball_y % 2 == 1 )); then
@@ -179,8 +179,8 @@ move_paddles() {
 
 move_ball()
 {
-    local next_ball_x=$(($ball_x + $delta_ball_x))
-    local next_ball_y=$(($ball_y + $delta_ball_y))
+    local next_ball_x=$(($ball_x + $ball_step_x))
+    local next_ball_y=$(($ball_y + $ball_step_y))
 
 
     # Clear old position
@@ -188,16 +188,16 @@ move_ball()
 
     # Check bounce from top or bottom
     if [ $next_ball_x -lt 0 ] || [ $next_ball_x -ge "$height" ]; then
-        delta_ball_x=$(($delta_ball_x*-1))
-        next_ball_x=$(($ball_x + $delta_ball_x))
+        ball_step_x=$(($ball_step_x*-1))
+        next_ball_x=$(($ball_x + $ball_step_x))
     fi
 
     # Check if ball went out of bounds or bounced of the paddles
     if [ $next_ball_y -lt 0 ] || [ $next_ball_y -ge "$width" ]; then
         still_running=0
     elif $(detect_ball_x_paddle_colision $next_ball_x $next_ball_y); then
-        delta_ball_y=$(($delta_ball_y*-1))
-        next_ball_y=$(($ball_y + $delta_ball_y))
+        ball_step_y=$(($ball_step_y*-1))
+        next_ball_y=$(($ball_y + $ball_step_y))
     fi
 
     # If bounced move and redraw
@@ -237,10 +237,10 @@ get_user_input()
 
 game_loop()
 {
-    trap "move_left_paddle_height \$paddle_x1 -\$paddle_speed"  $SIG_LEFT_UP
-    trap "move_left_paddle_height \$paddle_x1 \$paddle_speed"   $SIG_LEFT_DOWN
-    trap "move_right_paddle_height \$paddle_x2 -\$paddle_speed" $SIG_RIGHT_UP
-    trap "move_right_paddle_height \$paddle_x2 \$paddle_speed"  $SIG_RIGHT_DOWN
+    trap "move_left_paddle_height \$paddle_x1 -\$paddle_step"  $SIG_LEFT_UP
+    trap "move_left_paddle_height \$paddle_x1 \$paddle_step"   $SIG_LEFT_DOWN
+    trap "move_right_paddle_height \$paddle_x2 -\$paddle_step" $SIG_RIGHT_UP
+    trap "move_right_paddle_height \$paddle_x2 \$paddle_step"  $SIG_RIGHT_DOWN
     trap "exit 1;"                                              $SIG_QUIT
 
     while [ $still_running -eq 1 ];
