@@ -9,9 +9,14 @@ declare -i still_running=1
 declare -i height=$(($(tput lines)-5))
 declare -i width=$(($(tput cols)-2))
 
-# Ensure width is even since ball width and horizontal speed are 2
+# Ensure width is even since both ball's width and horizontal step are 2
 if (( width % 2 == 1 )); then
 width=$(($width-1))
+fi
+
+# Ensure height is even since paddle's width is even and vertical step is 2
+if (( height % 2 == 1 )); then
+height=$(($height-1))
 fi
 
 # General paddle variables
@@ -19,24 +24,29 @@ paddle_height=10
 paddle_width=2
 paddle_speed=2
 
+# Get paddles' start position
+paddle_start_x=$(($height/2 - $paddle_height/2))
+if (( paddle_start_x % 2 == 1 )); then
+    paddle_start_x=$(($paddle_start_x-1))
+fi
+
 # Left paddle variables
-declare -i paddle_x1=$(($height/2 - $paddle_height/2))
+declare -i paddle_x1=$paddle_start_x
 declare -i new_paddle_x1=$paddle_x1
 declare -i paddle_y1=0
 
 # Right paddle variables
-declare -i paddle_x2=$(($height/2 - $paddle_height/2))
+declare -i paddle_x2=$paddle_start_x
 declare -i new_paddle_x2=$paddle_x2
 declare -i paddle_y2=$(($width - 2))
 
 # Ball variables
-declare -i  ball_x ball_y delta_ball_x delta_ball_y
-ball_height=1
-ball_width=2
-ball_x=$(($height/2 - 2))
-ball_y=$(($width/2))
-delta_ball_x=-1
-delta_ball_y=2
+declare -i  ball_height=1
+declare -i  ball_width=2
+declare -i  ball_x=$(($height/2 - 2))
+declare -i  ball_y=$(($width/2))
+declare -i  delta_ball_x=-1
+declare -i  delta_ball_y=2
 
 # Ensure starting ball col is even
 if (( ball_y % 2 == 1 )); then
@@ -136,7 +146,7 @@ draw_board() {
 
 move_left_paddle_height()
 {
-    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $paddle_height - 1 + $2)) -lt $height ]; then
+    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $paddle_height + $2)) -le $height ]; then
         new_paddle_x1=$(($1 + $2))
     else
         new_paddle_x1=$1
@@ -146,7 +156,7 @@ move_left_paddle_height()
 
 move_right_paddle_height()
 {
-    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $paddle_height - 1 + $2)) -lt $height ]; then
+    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $paddle_height + $2)) -le $height ]; then
         new_paddle_x2=$(($1 + $2))
     else
         new_paddle_x2=$1
@@ -227,11 +237,11 @@ get_user_input()
 
 game_loop()
 {
-    trap "move_left_paddle_height \$new_paddle_x1 -\$paddle_speed"  $SIG_LEFT_UP
-    trap "move_left_paddle_height \$new_paddle_x1 \$paddle_speed"   $SIG_LEFT_DOWN
-    trap "move_right_paddle_height \$new_paddle_x2 -\$paddle_speed" $SIG_RIGHT_UP
-    trap "move_right_paddle_height \$new_paddle_x2 \$paddle_speed"  $SIG_RIGHT_DOWN
-    trap "exit 1;"                                                  $SIG_QUIT
+    trap "move_left_paddle_height \$paddle_x1 -\$paddle_speed"  $SIG_LEFT_UP
+    trap "move_left_paddle_height \$paddle_x1 \$paddle_speed"   $SIG_LEFT_DOWN
+    trap "move_right_paddle_height \$paddle_x2 -\$paddle_speed" $SIG_RIGHT_UP
+    trap "move_right_paddle_height \$paddle_x2 \$paddle_speed"  $SIG_RIGHT_DOWN
+    trap "exit 1;"                                              $SIG_QUIT
 
     while [ $still_running -eq 1 ];
     do
