@@ -6,17 +6,17 @@
 declare -i still_running=1
 
 # Get pong grid size
-declare -i height=$(($(tput lines)-5))
-declare -i width=$(($(tput cols)-2))
+declare -i grid_rows=$(($(tput lines)-5))
+declare -i grid_cols=$(($(tput cols)-2))
 
-# Ensure width is even since both ball's width and horizontal step are 2
-if (( width % 2 == 1 )); then
-width=$(($width-1))
+# Ensure grid_cols is even since both ball's width and horizontal step are 2
+if (( grid_cols % 2 == 1 )); then
+grid_cols=$(($grid_cols-1))
 fi
 
-# Ensure height is even since paddle's width is even and vertical step is 2
-if (( height % 2 == 1 )); then
-height=$(($height-1))
+# Ensure grid_rows is even since paddle's height is even and vertical step is 2
+if (( grid_rows % 2 == 1 )); then
+grid_rows=$(($grid_rows-1))
 fi
 
 # General paddle variables
@@ -26,7 +26,7 @@ declare -i paddle_step=2
 declare -i paddle_speed=2
 
 # Get paddles' start position
-paddle_start_row=$(($height/2 - $paddle_height/2))
+paddle_start_row=$(($grid_rows/2 - $paddle_height/2))
 if (( paddle_start_row % 2 == 1 )); then
     paddle_start_row=$(($paddle_start_row-1))
 fi
@@ -39,13 +39,13 @@ declare -i left_paddle_col=0
 # Right paddle variables
 declare -i right_paddle_row=$paddle_start_row
 declare -i new_right_paddle_row=$right_paddle_row
-declare -i right_paddle_col=$(($width - 2))
+declare -i right_paddle_col=$(($grid_cols - 2))
 
 # Ball variables
 declare -i  ball_height=1
 declare -i  ball_width=2
-declare -i  ball_x=$(($height/2 - 2))
-declare -i  ball_y=$(($width/2))
+declare -i  ball_x=$(($grid_rows/2 - 2))
+declare -i  ball_y=$(($grid_cols/2))
 declare -i  ball_step_x=-1
 declare -i  ball_step_y=2
 
@@ -76,8 +76,8 @@ init_game() {
     clear
     printf "\e[?25l"
     stty -echo
-    for ((i=0; i<height; i++)); do
-        for ((j=0; j<width; j++)); do
+    for ((i=0; i<grid_rows; i++)); do
+        for ((j=0; j<grid_cols; j++)); do
             eval "arr$i[$j]=' '"
         done
     done
@@ -129,22 +129,22 @@ detect_ball_x_paddle_colision()
 
 draw_board() {
     move_and_draw 1 1 "$border_color+$no_color"
-    for ((i=2; i<=width+1; i++)); do
+    for ((i=2; i<=grid_cols+1; i++)); do
         move_and_draw 1 $i "$border_color-$no_color"
     done
-    move_and_draw 1 $((width + 2)) "$border_color+$no_color"
+    move_and_draw 1 $((grid_cols + 2)) "$border_color+$no_color"
 
-    for ((i=0; i<height; i++)); do
+    for ((i=0; i<grid_rows; i++)); do
         move_and_draw $((i+2)) 1 "$border_color|$no_color"
         eval printf "\"\${arr$i[*]}\""
         printf "$border_color|$no_color"
     done
 
-    move_and_draw $((height+2)) 1 "$border_color+$no_color"
-    for ((i=2; i<=width+1; i++)); do
-        move_and_draw $((height+2)) $i "$border_color-$no_color"
+    move_and_draw $((grid_rows+2)) 1 "$border_color+$no_color"
+    for ((i=2; i<=grid_cols+1; i++)); do
+        move_and_draw $((grid_rows+2)) $i "$border_color-$no_color"
     done
-    move_and_draw $((height+2)) $((width + 2)) "$border_color+$no_color"
+    move_and_draw $((grid_rows+2)) $((grid_cols + 2)) "$border_color+$no_color"
 }
 
 
@@ -152,7 +152,7 @@ move_left_paddle()
 {
     new_left_paddle_row=$1
     for ((i=0; i<$3; i++)); do
-        if [ $(($new_left_paddle_row + $2)) -ge 0 ] && [ $(($new_left_paddle_row + $paddle_height + $2)) -le $height ]; then
+        if [ $(($new_left_paddle_row + $2)) -ge 0 ] && [ $(($new_left_paddle_row + $paddle_height + $2)) -le $grid_rows ]; then
             new_left_paddle_row=$(($new_left_paddle_row + $2))
         else
             break
@@ -165,7 +165,7 @@ move_right_paddle()
 {
     new_right_paddle_row=$1
     for ((i=0; i<$3; i++)); do
-        if [ $(($new_right_paddle_row + $2)) -ge 0 ] && [ $(($new_right_paddle_row + $paddle_height + $2)) -le $height ]; then
+        if [ $(($new_right_paddle_row + $2)) -ge 0 ] && [ $(($new_right_paddle_row + $paddle_height + $2)) -le $grid_rows ]; then
             new_right_paddle_row=$(($new_right_paddle_row + $2))
         else
             break
@@ -197,13 +197,13 @@ move_ball()
     draw_ball "$ball_x" "$ball_y" "$no_color" "$no_color"
 
     # Check bounce from top or bottom
-    if [ $next_ball_x -lt 0 ] || [ $next_ball_x -ge "$height" ]; then
+    if [ $next_ball_x -lt 0 ] || [ $next_ball_x -ge "$grid_rows" ]; then
         ball_step_x=$(($ball_step_x*-1))
         next_ball_x=$(($ball_x + $ball_step_x))
     fi
 
     # Check if ball went out of bounds or bounced of the paddles
-    if [ $next_ball_y -lt 0 ] || [ $next_ball_y -ge "$width" ]; then
+    if [ $next_ball_y -lt 0 ] || [ $next_ball_y -ge "$grid_cols" ]; then
         still_running=0
     elif $(detect_ball_x_paddle_colision $next_ball_x $next_ball_y); then
         ball_step_y=$(($ball_step_y*-1))
