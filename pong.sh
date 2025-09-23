@@ -20,9 +20,10 @@ height=$(($height-1))
 fi
 
 # General paddle variables
-paddle_height=10
-paddle_width=2
-paddle_step=2
+declare -i paddle_height=10
+declare -i paddle_width=2
+declare -i paddle_step=2
+declare -i paddle_speed=2
 
 # Get paddles' start position
 paddle_start_x=$(($height/2 - $paddle_height/2))
@@ -90,8 +91,11 @@ move_and_draw() {
 
 draw_rectangle()
 {
-    for ((i=0; i<$5; i++)); do
-        for ((j=0; j<$6; j++)); do
+    local height=$5
+    local width=$6
+
+    for ((i=0; i<$height; i++)); do
+        for ((j=0; j<$width; j++)); do
             eval "arr$(($1+$i))[$(($2+$j))]=\"${3} ${4}\""
         done
     done
@@ -146,21 +150,27 @@ draw_board() {
 
 move_left_paddle_height()
 {
-    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $paddle_height + $2)) -le $height ]; then
-        new_paddle_x1=$(($1 + $2))
-    else
-        new_paddle_x1=$1
-    fi
+    new_paddle_x1=$1
+    for ((i=0; i<$3; i++)); do
+        if [ $(($new_paddle_x1 + $2)) -ge 0 ] && [ $(($new_paddle_x1 + $paddle_height + $2)) -le $height ]; then
+            new_paddle_x1=$(($new_paddle_x1 + $2))
+        else
+            break
+        fi
+    done
 }
 
 
 move_right_paddle_height()
 {
-    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $paddle_height + $2)) -le $height ]; then
-        new_paddle_x2=$(($1 + $2))
-    else
-        new_paddle_x2=$1
-    fi
+    new_paddle_x2=$1
+    for ((i=0; i<$3; i++)); do
+        if [ $(($new_paddle_x2 + $2)) -ge 0 ] && [ $(($new_paddle_x2 + $paddle_height + $2)) -le $height ]; then
+            new_paddle_x2=$(($new_paddle_x2 + $2))
+        else
+            break
+        fi
+    done
 }
 
 
@@ -237,11 +247,11 @@ get_user_input()
 
 game_loop()
 {
-    trap "move_left_paddle_height \$paddle_x1 -\$paddle_step"  $SIG_LEFT_UP
-    trap "move_left_paddle_height \$paddle_x1 \$paddle_step"   $SIG_LEFT_DOWN
-    trap "move_right_paddle_height \$paddle_x2 -\$paddle_step" $SIG_RIGHT_UP
-    trap "move_right_paddle_height \$paddle_x2 \$paddle_step"  $SIG_RIGHT_DOWN
-    trap "exit 1;"                                              $SIG_QUIT
+    trap "move_left_paddle_height   \$paddle_x1 -\$paddle_step  \$paddle_speed" $SIG_LEFT_UP
+    trap "move_left_paddle_height   \$paddle_x1 \$paddle_step   \$paddle_speed" $SIG_LEFT_DOWN
+    trap "move_right_paddle_height  \$paddle_x2 -\$paddle_step  \$paddle_speed" $SIG_RIGHT_UP
+    trap "move_right_paddle_height  \$paddle_x2 \$paddle_step   \$paddle_speed" $SIG_RIGHT_DOWN
+    trap "exit 1;"                                                              $SIG_QUIT
 
     while [ $still_running -eq 1 ];
     do
