@@ -44,14 +44,14 @@ declare -i right_paddle_col=$(($grid_cols - 2))
 # Ball variables
 declare -i  ball_height=1
 declare -i  ball_width=2
-declare -i  ball_x=$(($grid_rows/2 - 2))
-declare -i  ball_y=$(($grid_cols/2))
+declare -i  ball_row=$(($grid_rows/2 - 2))
+declare -i  ball_col=$(($grid_cols/2))
 declare -i  ball_step_x=-1
 declare -i  ball_step_y=2
 
 # Ensure starting ball col is even
-if (( ball_y % 2 == 1 )); then
-ball_y=$(($ball_y-1))
+if (( ball_col % 2 == 1 )); then
+ball_col=$(($ball_col-1))
 fi
 
 # Internal field separator, how bash splits strings
@@ -189,32 +189,32 @@ move_paddles() {
 
 move_ball()
 {
-    local next_ball_x=$(($ball_x + $ball_step_x))
-    local next_ball_y=$(($ball_y + $ball_step_y))
+    local next_ball_row=$(($ball_row + $ball_step_x))
+    local next_ball_col=$(($ball_col + $ball_step_y))
 
 
     # Clear old position
-    draw_ball "$ball_x" "$ball_y" "$no_color" "$no_color"
+    draw_ball "$ball_row" "$ball_col" "$no_color" "$no_color"
 
     # Check bounce from top or bottom
-    if [ $next_ball_x -lt 0 ] || [ $next_ball_x -ge "$grid_rows" ]; then
+    if [ $next_ball_row -lt 0 ] || [ $next_ball_row -ge "$grid_rows" ]; then
         ball_step_x=$(($ball_step_x*-1))
-        next_ball_x=$(($ball_x + $ball_step_x))
+        next_ball_row=$(($ball_row + $ball_step_x))
     fi
 
     # Check if ball went out of bounds or bounced of the paddles
-    if [ $next_ball_y -lt 0 ] || [ $next_ball_y -ge "$grid_cols" ]; then
+    if [ $next_ball_col -lt 0 ] || [ $next_ball_col -ge "$grid_cols" ]; then
         still_running=0
-    elif $(detect_ball_x_paddle_colision $next_ball_x $next_ball_y); then
+    elif $(detect_ball_x_paddle_colision $next_ball_row $next_ball_col); then
         ball_step_y=$(($ball_step_y*-1))
-        next_ball_y=$(($ball_y + $ball_step_y))
+        next_ball_col=$(($ball_col + $ball_step_y))
     fi
 
     # If bounced move and redraw
     if [ $still_running -eq 1 ]; then
-        ball_x=$next_ball_x
-        ball_y=$next_ball_y
-        draw_ball "$ball_x" "$ball_y" "$ball_color" "$no_color"
+        ball_row=$next_ball_row
+        ball_col=$next_ball_col
+        draw_ball "$ball_row" "$ball_col" "$ball_color" "$no_color"
     fi
 }
 
