@@ -26,20 +26,20 @@ declare -i paddle_step=2
 declare -i paddle_speed=2
 
 # Get paddles' start position
-paddle_start_x=$(($height/2 - $paddle_height/2))
-if (( paddle_start_x % 2 == 1 )); then
-    paddle_start_x=$(($paddle_start_x-1))
+paddle_start_row=$(($height/2 - $paddle_height/2))
+if (( paddle_start_row % 2 == 1 )); then
+    paddle_start_row=$(($paddle_start_row-1))
 fi
 
 # Left paddle variables
-declare -i paddle_x1=$paddle_start_x
-declare -i new_paddle_x1=$paddle_x1
-declare -i paddle_y1=0
+declare -i left_paddle_row=$paddle_start_row
+declare -i new_left_paddle_row=$left_paddle_row
+declare -i left_paddle_col=0
 
 # Right paddle variables
-declare -i paddle_x2=$paddle_start_x
-declare -i new_paddle_x2=$paddle_x2
-declare -i paddle_y2=$(($width - 2))
+declare -i right_paddle_row=$paddle_start_row
+declare -i new_right_paddle_row=$right_paddle_row
+declare -i right_paddle_col=$(($width - 2))
 
 # Ball variables
 declare -i  ball_height=1
@@ -148,12 +148,12 @@ draw_board() {
 }
 
 
-move_left_paddle_height()
+move_left_paddle()
 {
-    new_paddle_x1=$1
+    new_left_paddle_row=$1
     for ((i=0; i<$3; i++)); do
-        if [ $(($new_paddle_x1 + $2)) -ge 0 ] && [ $(($new_paddle_x1 + $paddle_height + $2)) -le $height ]; then
-            new_paddle_x1=$(($new_paddle_x1 + $2))
+        if [ $(($new_left_paddle_row + $2)) -ge 0 ] && [ $(($new_left_paddle_row + $paddle_height + $2)) -le $height ]; then
+            new_left_paddle_row=$(($new_left_paddle_row + $2))
         else
             break
         fi
@@ -161,12 +161,12 @@ move_left_paddle_height()
 }
 
 
-move_right_paddle_height()
+move_right_paddle()
 {
-    new_paddle_x2=$1
+    new_right_paddle_row=$1
     for ((i=0; i<$3; i++)); do
-        if [ $(($new_paddle_x2 + $2)) -ge 0 ] && [ $(($new_paddle_x2 + $paddle_height + $2)) -le $height ]; then
-            new_paddle_x2=$(($new_paddle_x2 + $2))
+        if [ $(($new_right_paddle_row + $2)) -ge 0 ] && [ $(($new_right_paddle_row + $paddle_height + $2)) -le $height ]; then
+            new_right_paddle_row=$(($new_right_paddle_row + $2))
         else
             break
         fi
@@ -176,14 +176,14 @@ move_right_paddle_height()
 
 move_paddles() {
     # Left paddle
-    draw_paddle "$paddle_x1" "$paddle_y1" "$no_color" "$no_color"
-    paddle_x1=$new_paddle_x1
-    draw_paddle "$paddle_x1" "$paddle_y1" "$border_color" "$no_color"
+    draw_paddle "$left_paddle_row" "$left_paddle_col" "$no_color" "$no_color"
+    left_paddle_row=$new_left_paddle_row
+    draw_paddle "$left_paddle_row" "$left_paddle_col" "$border_color" "$no_color"
 
     # Right paddle
-    draw_paddle "$paddle_x2" "$paddle_y2" "$no_color" "$no_color"
-    paddle_x2=$new_paddle_x2
-    draw_paddle "$paddle_x2" "$paddle_y2" "$border_color" "$no_color"
+    draw_paddle "$right_paddle_row" "$right_paddle_col" "$no_color" "$no_color"
+    right_paddle_row=$new_right_paddle_row
+    draw_paddle "$right_paddle_row" "$right_paddle_col" "$border_color" "$no_color"
 }
 
 
@@ -247,10 +247,10 @@ get_user_input()
 
 game_loop()
 {
-    trap "move_left_paddle_height   \$paddle_x1 -\$paddle_step  \$paddle_speed" $SIG_LEFT_UP
-    trap "move_left_paddle_height   \$paddle_x1 \$paddle_step   \$paddle_speed" $SIG_LEFT_DOWN
-    trap "move_right_paddle_height  \$paddle_x2 -\$paddle_step  \$paddle_speed" $SIG_RIGHT_UP
-    trap "move_right_paddle_height  \$paddle_x2 \$paddle_step   \$paddle_speed" $SIG_RIGHT_DOWN
+    trap "move_left_paddle   \$left_paddle_row -\$paddle_step  \$paddle_speed" $SIG_LEFT_UP
+    trap "move_left_paddle   \$left_paddle_row \$paddle_step   \$paddle_speed" $SIG_LEFT_DOWN
+    trap "move_right_paddle  \$right_paddle_row -\$paddle_step  \$paddle_speed" $SIG_RIGHT_UP
+    trap "move_right_paddle  \$right_paddle_row \$paddle_step   \$paddle_speed" $SIG_RIGHT_DOWN
     trap "exit 1;"                                                              $SIG_QUIT
 
     while [ $still_running -eq 1 ];
