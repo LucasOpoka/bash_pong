@@ -241,6 +241,7 @@ get_user_input()
             'l')   kill -$SIG_RIGHT_DOWN $game_pid  # l
                     ;; 
         esac
+        sleep 0.05
     done
 }
 
