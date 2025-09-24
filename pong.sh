@@ -3,7 +3,7 @@
 # -------------------------------------------------- Variables section --------------------------------------------------
 
 # Wheter game is running
-declare -i still_running=1
+declare -i game_running=0
 
 # Get pong grid size
 declare -i grid_rows=$(($(tput lines)-5))
@@ -197,14 +197,14 @@ move_ball()
 
     # Check if ball went out of bounds or bounced of the paddles
     if [ $next_ball_col -lt 0 ] || [ $next_ball_col -ge "$grid_cols" ]; then
-        still_running=0
+        game_running=0
     elif $(detect_ball_x_paddle_colision $next_ball_row $next_ball_col); then
         ball_step_y=$(($ball_step_y*-1))
         next_ball_col=$(($ball_col + $ball_step_y))
     fi
 
     # If bounced, clear old position, move and redraw
-    if [ $still_running -eq 1 ]; then
+    if [ $game_running -eq 1 ]; then
         draw_ball "$ball_row" "$ball_col" "$no_color" "$no_color"
         ball_row=$next_ball_row
         ball_col=$next_ball_col
@@ -238,6 +238,19 @@ get_user_input()
     done
 }
 
+start_screen_loop()
+{
+    while [ $game_running -eq 0 ];
+    do
+        read -rsn1 input # get 1 char
+
+        if [[ $input = "" ]]; then 
+            game_running=1
+        fi
+    done
+
+    sleep 0.5
+}
 
 game_loop()
 {
@@ -247,7 +260,7 @@ game_loop()
     trap "move_right_paddle  \$right_paddle_row \$paddle_speed"     $SIG_RIGHT_DOWN
     trap "exit 1;"                                                  $SIG_QUIT
 
-    while [ $still_running -eq 1 ];
+    while [ $game_running -eq 1 ];
     do
         move_paddles
         move_ball
@@ -272,6 +285,7 @@ clear_game()
 init_game
 draw_board
 
+start_screen_loop
 game_loop & game_pid=$!
 get_user_input
 
