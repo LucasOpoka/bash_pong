@@ -22,8 +22,7 @@ fi
 # General paddle variables
 declare -i paddle_height=10
 declare -i paddle_width=2
-declare -i paddle_step=2
-declare -i paddle_speed=2
+declare -i paddle_speed=3
 
 # Get paddles' start position
 paddle_start_row=$(($grid_rows/2 - $paddle_height/2))
@@ -150,27 +149,25 @@ draw_board() {
 
 move_left_paddle()
 {
-    new_left_paddle_row=$1
-    for ((i=0; i<$3; i++)); do
-        if [ $(($new_left_paddle_row + $2)) -ge 0 ] && [ $(($new_left_paddle_row + $paddle_height + $2)) -le $grid_rows ]; then
-            new_left_paddle_row=$(($new_left_paddle_row + $2))
-        else
-            break
-        fi
-    done
+    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $2 + $paddle_height)) -le $grid_rows ]; then
+        new_left_paddle_row=$(($1 + $2))
+    elif [ $2 -lt 0 ]; then
+        new_left_paddle_row=0
+    else
+        new_left_paddle_row=$(($grid_rows - $paddle_height))
+    fi
 }
 
 
 move_right_paddle()
 {
-    new_right_paddle_row=$1
-    for ((i=0; i<$3; i++)); do
-        if [ $(($new_right_paddle_row + $2)) -ge 0 ] && [ $(($new_right_paddle_row + $paddle_height + $2)) -le $grid_rows ]; then
-            new_right_paddle_row=$(($new_right_paddle_row + $2))
-        else
-            break
-        fi
-    done
+    if [ $(($1 + $2)) -ge 0 ] && [ $(($1 + $2 + $paddle_height)) -le $grid_rows ]; then
+        new_right_paddle_row=$(($1 + $2))
+    elif [ $2 -lt 0 ]; then
+        new_right_paddle_row=0
+    else
+        new_right_paddle_row=$(($grid_rows - $paddle_height))
+    fi
 }
 
 
@@ -192,10 +189,6 @@ move_ball()
     local next_ball_row=$(($ball_row + $ball_step_x))
     local next_ball_col=$(($ball_col + $ball_step_y))
 
-
-    # Clear old position
-    draw_ball "$ball_row" "$ball_col" "$no_color" "$no_color"
-
     # Check bounce from top or bottom
     if [ $next_ball_row -lt 0 ] || [ $next_ball_row -ge "$grid_rows" ]; then
         ball_step_x=$(($ball_step_x*-1))
@@ -210,8 +203,9 @@ move_ball()
         next_ball_col=$(($ball_col + $ball_step_y))
     fi
 
-    # If bounced move and redraw
+    # If bounced, clear old position, move and redraw
     if [ $still_running -eq 1 ]; then
+        draw_ball "$ball_row" "$ball_col" "$no_color" "$no_color"
         ball_row=$next_ball_row
         ball_col=$next_ball_col
         draw_ball "$ball_row" "$ball_col" "$ball_color" "$no_color"
@@ -241,18 +235,17 @@ get_user_input()
             'l')   kill -$SIG_RIGHT_DOWN $game_pid  # l
                     ;; 
         esac
-        sleep 0.05
     done
 }
 
 
 game_loop()
 {
-    trap "move_left_paddle   \$left_paddle_row -\$paddle_step  \$paddle_speed" $SIG_LEFT_UP
-    trap "move_left_paddle   \$left_paddle_row \$paddle_step   \$paddle_speed" $SIG_LEFT_DOWN
-    trap "move_right_paddle  \$right_paddle_row -\$paddle_step  \$paddle_speed" $SIG_RIGHT_UP
-    trap "move_right_paddle  \$right_paddle_row \$paddle_step   \$paddle_speed" $SIG_RIGHT_DOWN
-    trap "exit 1;"                                                              $SIG_QUIT
+    trap "move_left_paddle   \$left_paddle_row  -\$paddle_speed"    $SIG_LEFT_UP
+    trap "move_left_paddle   \$left_paddle_row  \$paddle_speed"     $SIG_LEFT_DOWN
+    trap "move_right_paddle  \$right_paddle_row -\$paddle_speed"    $SIG_RIGHT_UP
+    trap "move_right_paddle  \$right_paddle_row \$paddle_speed"     $SIG_RIGHT_DOWN
+    trap "exit 1;"                                                  $SIG_QUIT
 
     while [ $still_running -eq 1 ];
     do
