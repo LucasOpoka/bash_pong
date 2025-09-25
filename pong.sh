@@ -230,25 +230,76 @@ get_user_input()
                     ;;
             's')    kill -$SIG_LEFT_DOWN $game_pid  # s
                     ;;
-            'o')   kill -$SIG_RIGHT_UP $game_pid    # o
+            'o')    kill -$SIG_RIGHT_UP $game_pid    # o
                     ;;
-            'l')   kill -$SIG_RIGHT_DOWN $game_pid  # l
+            'l')    kill -$SIG_RIGHT_DOWN $game_pid  # l
                     ;; 
         esac
     done
 }
 
+draw_start_message()
+{
+    local mid_row=$(($grid_rows / 2))
+    local mid_col=$(($grid_cols / 2))
+    declare -i str_col
+
+    eval "str_arr0=(-22 -20 -18 -16 -12 -6 -2 0 2 6 8 10 12 16 18 20)"
+    eval "str_arr1=(-22 -12 -10 -6 0 6 16 22)"
+    eval "str_arr2=(-22 -20 -18 -12 -8 -6 0 6 8 10 16 18 20)"
+    eval "str_arr3=(-22 -12 -6 0 6 16 22)"
+    eval "str_arr4=(-22 -20 -18 -16 -12 -6 0 6 8 10 12 16 22)"
+    eval "str_arr5=()"
+    eval "str_arr6=(-6 -4 -2 4 6)"
+    eval "str_arr7=(-4 2 8)"
+    eval "str_arr8=(-4 2 8)"
+    eval "str_arr9=(-4 2 8)"
+    eval "str_arr10=(-4 4 6)"
+    eval "str_arr11=()"
+    eval "str_arr12=(-16 -18 -20 -12 -10 -8 -2 0 6 8 10 16 18 20)"
+    eval "str_arr13=(-22 -10 -4 2 6 12 18)"
+    eval "str_arr14=(-18 -20 -10 -4 -2 0 2 6 8 10 18)"
+    eval "str_arr15=(-16 -10 -4 2 6 12 18)"
+    eval "str_arr16=(-18 -20 -22 -10 -4 2 6 12 18)"
+
+    for ((i=0; i<=16; i++)); do
+        declare -n local_arr="str_arr$i"
+        for j in ${!local_arr[@]}; do
+            str_col=$((local_arr[$j]))
+            eval "arr$(($mid_row+$i-8))[$(($mid_col+$str_col))]=\"\$1 \$no_color\""
+            eval "arr$(($mid_row+$i-8))[$(($mid_col+$str_col+1))]=\"\$1 \$no_color\""
+        done
+    done
+    
+    draw_board
+}
+
 start_screen_loop()
 {
-    while [ $game_running -eq 0 ];
-    do
-        read -rsn1 input # get 1 char
+    local message_color
+    declare -i counter=0
 
-        if [[ $input = "" ]]; then 
-            game_running=1
+    while true;
+    do
+        counter=$((($counter+1) % 2))
+        if [ $counter -eq 1 ]; then
+            message_color=$border_color
+        else
+            message_color=$no_color
+        fi
+
+        draw_start_message "$message_color"
+
+        read -rsn1 -t 0.45 input # get 1 char
+        if [[ $? -gt 128 ]] ; then
+            continue
+        elif [[ $input = "" ]]; then 
+            break
         fi
     done
 
+    draw_start_message "$no_color"
+    game_running=1
     sleep 0.5
 }
 
