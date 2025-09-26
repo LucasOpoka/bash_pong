@@ -263,11 +263,11 @@ draw_start_message()
     eval "str_arr16=(-18 -20 -22 -10 -4 2 6 12 18)"
 
     for ((i=0; i<=16; i++)); do
-        declare -n local_arr="str_arr$i"
-        for j in ${!local_arr[@]}; do
-            str_col=$((local_arr[$j]))
-            eval "arr$(($mid_row+$i-8))[$(($mid_col+$str_col))]=\"\$1 \$no_color\""
-            eval "arr$(($mid_row+$i-8))[$(($mid_col+$str_col+1))]=\"\$1 \$no_color\""
+        eval "sub_arr_len=\${#str_arr$i[@]}"
+        for ((j=0; j<sub_arr_len; j++)); do
+            eval "str_col=\$((str_arr$i[$j]))";
+            eval "arr$(($mid_row+$i-8))[$(($mid_col+$str_col))]=\"\$1 \$no_color\"";
+            eval "arr$(($mid_row+$i-8))[$(($mid_col+$str_col+1))]=\"\$1 \$no_color\"";
         done
     done
     
@@ -279,21 +279,24 @@ start_screen_loop()
     local message_color
     declare -i counter=0
 
-    while true;
+    while [ $counter -le 4 ];
     do
-        counter=$((($counter+1) % 2))
-        if [ $counter -eq 1 ]; then
+        if (( $counter % 2 == 0 )); then
             message_color=$border_color
         else
             message_color=$no_color
         fi
 
+        counter=$(($counter+1))
         draw_start_message "$message_color"
+        sleep 0.45
+    done
+    
 
-        read -rsn1 -t 0.45 input # get 1 char
-        if [[ $? -gt 128 ]] ; then
-            continue
-        elif [[ $input = "" ]]; then 
+    while true;
+    do
+        read -rsn1 input # get 1 char
+        if [[ $input = "" ]]; then 
             break
         fi
     done
