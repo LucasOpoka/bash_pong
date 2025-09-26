@@ -54,7 +54,7 @@ SIG_END=HUP
 
 
 # -------------------------------------------------- Functions section --------------------------------------------------
-init_game()
+init_grid()
 {
     clear
     printf "\e[?25l"
@@ -324,7 +324,7 @@ clear_game()
 
 # -------------------------------------------------- Main section --------------------------------------------------
 
-init_game
+init_grid
 draw_grid
 
 start_screen_loop
