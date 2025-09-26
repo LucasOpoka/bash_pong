@@ -16,9 +16,7 @@ declare -i game_running=0
 declare -i paddle_height=10
 declare -i paddle_width=1
 declare -i paddle_speed=3
-
-# Get paddles' start position
-paddle_start_row=$(($grid_rows/2 - $paddle_height/2))
+declare -i paddle_start_row=$(($grid_rows/2 - $paddle_height/2))
 
 # Left paddle variables
 declare -i left_paddle_row=$paddle_start_row
@@ -56,7 +54,8 @@ SIG_END=HUP
 
 
 # -------------------------------------------------- Functions section --------------------------------------------------
-init_game() {
+init_game()
+{
     clear
     printf "\e[?25l"
     stty -echo
@@ -68,33 +67,33 @@ init_game() {
 }
 
 
-move_and_draw() {
+move_and_draw()
+{
     printf "\e[${1};${2}H$3"
 }
 
-
+# args: $1-row $2-col $3-height $4-width $5-color
 draw_rectangle()
 {
-    local height=$5
-    local width=$6
-
-    for ((i=0; i<$height; i++)); do
-        for ((j=0; j<$width; j++)); do
-            eval "arr$(($1+$i))[$(($2+$j))]=\"${3}$pixel${4}\""
+    for ((i=0; i<$3; i++)); do
+        for ((j=0; j<$4; j++)); do
+            eval "arr$(($1+$i))[$(($2+$j))]=\"$5$pixel$no_color\""
         done
     done
 }
 
 
+# args: $1-row $2-col $3-color
 draw_paddle()
 {
-    draw_rectangle "$1" "$2" "$3" "$4" "$paddle_height" "$paddle_width"
+    draw_rectangle "$1" "$2" "$paddle_height" "$paddle_width" "$3"
 }
 
 
+# args: $1-row $2-col $3-color
 draw_ball()
 {
-    draw_rectangle "$1" "$2" "$3" "$4" "$ball_height" "$ball_width"
+    draw_rectangle "$1" "$2" "$ball_height" "$ball_width" "$3"
 }
 
 
@@ -163,14 +162,14 @@ move_right_paddle()
 move_paddles()
 {
     # Left paddle
-    draw_paddle "$left_paddle_row" "$left_paddle_col" "$no_color" "$no_color"
+    draw_paddle "$left_paddle_row" "$left_paddle_col" "$no_color"
     left_paddle_row=$new_left_paddle_row
-    draw_paddle "$left_paddle_row" "$left_paddle_col" "$border_color" "$no_color"
+    draw_paddle "$left_paddle_row" "$left_paddle_col" "$border_color"
 
     # Right paddle
-    draw_paddle "$right_paddle_row" "$right_paddle_col" "$no_color" "$no_color"
+    draw_paddle "$right_paddle_row" "$right_paddle_col" "$no_color"
     right_paddle_row=$new_right_paddle_row
-    draw_paddle "$right_paddle_row" "$right_paddle_col" "$border_color" "$no_color"
+    draw_paddle "$right_paddle_row" "$right_paddle_col" "$border_color"
 }
 
 
@@ -195,10 +194,10 @@ move_ball()
 
     # If bounced, clear old position, move and redraw
     if [ $game_running -eq 1 ]; then
-        draw_ball "$ball_row" "$ball_col" "$no_color" "$no_color"
+        draw_ball "$ball_row" "$ball_col" "$no_color"
         ball_row=$next_ball_row
         ball_col=$next_ball_col
-        draw_ball "$ball_row" "$ball_col" "$ball_color" "$no_color"
+        draw_ball "$ball_row" "$ball_col" "$ball_color"
     fi
 }
 
