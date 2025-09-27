@@ -31,10 +31,16 @@ declare -i right_paddle_col=$(($grid_cols - 1))
 # Ball variables
 declare -i  ball_height=1
 declare -i  ball_width=1
-declare -i  ball_row=$(($grid_rows/2 - 2))
-declare -i  ball_col=$(($grid_cols/2))
-declare -i  ball_step_x=-1
-declare -i  ball_step_y=1
+declare -i  ball_start_row=$(($grid_rows/2 - 2))
+declare -i  ball_start_col=$(($grid_cols/2))
+declare -i  ball_row=$ball_start_row
+declare -i  ball_col=$ball_start_col
+declare -i  ball_speed_row=-1
+declare -i  ball_speed_col=1
+
+# Score variables
+declare -i left_points=0
+declare -i right_points=0
 
 # Internal field separator, how bash splits strings
 IFS=''
@@ -64,6 +70,26 @@ init_grid()
             eval "arr$i[$j]=\"$pixel\""
         done
     done
+}
+
+
+clear_grid()
+{
+    for ((i=0; i<grid_rows; i++)); do
+        for ((j=0; j<grid_cols; j++)); do
+            eval "arr$i[$j]=\"$no_color$pixel$no_color\""
+        done
+    done
+}
+
+
+reset_positions()
+{
+    next_ball_row=$ball_start_row
+    next_ball_col=$ball_start_col
+
+    new_left_paddle_row=$paddle_start_row
+    new_right_paddle_row=$paddle_start_row
 }
 
 
@@ -127,11 +153,11 @@ draw_grid()
     done
 
     # Bottom row
-    move_and_draw $((grid_rows+2)) 1 "$border_color+$no_color"
+    move_and_draw $((grid_rows+2)) 1 "$border_color$left_points$no_color"
     for ((i=1; i<=grid_cols; i++)); do
         move_and_draw $((grid_rows+2)) $(($i*2)) "$border_color--$no_color"
     done
-    move_and_draw $((grid_rows+2)) $((grid_cols*2 + 2)) "$border_color+$no_color"
+    move_and_draw $((grid_rows+2)) $((grid_cols*2 + 2)) "$border_color$right_points$no_color"
 }
 
 
@@ -175,21 +201,34 @@ move_paddles()
 
 move_ball()
 {
-    local next_ball_row=$(($ball_row + $ball_step_x))
-    local next_ball_col=$(($ball_col + $ball_step_y))
+    local next_ball_row=$(($ball_row + $ball_speed_row))
+    local next_ball_col=$(($ball_col + $ball_speed_col))
 
     # Check bounce from top or bottom
     if [ $next_ball_row -lt 0 ] || [ $next_ball_row -ge "$grid_rows" ]; then
-        ball_step_x=$(($ball_step_x*-1))
-        next_ball_row=$(($ball_row + $ball_step_x))
+        ball_speed_row=$(($ball_speed_row*-1))
+        next_ball_row=$(($ball_row + $ball_speed_row))
     fi
 
     # Check if ball went out of bounds or bounced of the paddles
     if [ $next_ball_col -lt 0 ] || [ $next_ball_col -ge "$grid_cols" ]; then
-        game_running=0
+        if [ $next_ball_col -lt 0 ]; then
+            right_points=$(($right_points+1))
+        else
+            left_points=$(($left_points+1))
+        fi
+
+        if [ $left_points -lt 5 ] && [ $right_points -lt 5 ]; then
+            clear_grid
+            draw_grid
+            reset_positions
+            sleep 0.5
+        else
+            game_running=0
+        fi
     elif $(detect_ball_x_paddle_colision $next_ball_row $next_ball_col); then
-        ball_step_y=$(($ball_step_y*-1))
-        next_ball_col=$(($ball_col + $ball_step_y))
+        ball_speed_col=$(($ball_speed_col*-1))
+        next_ball_col=$(($ball_col + $ball_speed_col))
     fi
 
     # If bounced, clear old position, move and redraw
@@ -233,23 +272,23 @@ draw_start_message()
     local mid_col=$(($grid_cols / 2))
     declare -i str_col
 
-    eval "str_arr0=(-11 -10 -9 -8 -6 -3 -1 0 1 3 4 5 6 8 9 10)"
-    eval "str_arr1=(-11 -6 -5 -3 0 3 8 11)"
-    eval "str_arr2=(-11 -10 -9 -6 -4 -3 0 3 4 5 8 9 10)"
-    eval "str_arr3=(-11 -6 -3 0 3 8 11)"
-    eval "str_arr4=(-11 -10 -9 -8 -6 -3 0 3 4 5 6 8 11)"
-    eval "str_arr5=()"
-    eval "str_arr6=(-3 -2 -1 2 3)"
-    eval "str_arr7=(-2 1 4)"
-    eval "str_arr8=(-2 1 4)"
-    eval "str_arr9=(-2 1 4)"
-    eval "str_arr10=(-2 2 3)"
-    eval "str_arr11=()"
-    eval "str_arr12=(-8 -9 -10 -6 -5 -4 -1 0 3 4 5 8 9 10)"
-    eval "str_arr13=(-11 -5 -2 1 3 6 9)"
-    eval "str_arr14=(-9 -10 -5 -2 -1 0 1 3 4 5 9)"
-    eval "str_arr15=(-8 -5 -2 1 3 6 9)"
-    eval "str_arr16=(-9 -10 -11 -5 -2 1 3 6 9)"
+    str_arr0=(-11 -10 -9 -8 -6 -3 -1 0 1 3 4 5 6 8 9 10)
+    str_arr1=(-11 -6 -5 -3 0 3 8 11)
+    str_arr2=(-11 -10 -9 -6 -4 -3 0 3 4 5 8 9 10)
+    str_arr3=(-11 -6 -3 0 3 8 11)
+    str_arr4=(-11 -10 -9 -8 -6 -3 0 3 4 5 6 8 11)
+
+    str_arr6=(-3 -2 -1 2 3)
+    str_arr7=(-2 1 4)
+    str_arr8=(-2 1 4)
+    str_arr9=(-2 1 4)
+    str_arr10=(-2 2 3)
+
+    str_arr12=(-8 -9 -10 -6 -5 -4 -1 0 3 4 5 8 9 10)
+    str_arr13=(-11 -5 -2 1 3 6 9)
+    str_arr14=(-9 -10 -5 -2 -1 0 1 3 4 5 9)
+    str_arr15=(-8 -5 -2 1 3 6 9)
+    str_arr16=(-9 -10 -11 -5 -2 1 3 6 9)
 
     for ((i=0; i<=16; i++)); do
         eval "sub_arr_len=\${#str_arr$i[@]}"
