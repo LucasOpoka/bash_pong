@@ -153,11 +153,11 @@ draw_grid()
     done
 
     # Bottom row
-    move_and_draw $((grid_rows+2)) 1 "$border_color$left_points$no_color"
+    move_and_draw $((grid_rows+2)) 1 "$border_color+$no_color"
     for ((i=1; i<=grid_cols; i++)); do
         move_and_draw $((grid_rows+2)) $(($i*2)) "$border_color--$no_color"
     done
-    move_and_draw $((grid_rows+2)) $((grid_cols*2 + 2)) "$border_color$right_points$no_color"
+    move_and_draw $((grid_rows+2)) $((grid_cols*2 + 2)) "$border_color+$no_color"
 }
 
 
@@ -219,12 +219,13 @@ move_ball()
         fi
 
         if [ $left_points -lt 5 ] && [ $right_points -lt 5 ]; then
-            clear_grid
-            draw_grid
+            display_score "$left_points" "$right_points"
             reset_positions
-            sleep 0.5
+            sleep 0.75
+            clear_grid
         else
             game_running=0
+            display_score "$left_points" "$right_points"
         fi
     elif $(detect_ball_x_paddle_colision $next_ball_row $next_ball_col); then
         ball_speed_col=$(($ball_speed_col*-1))
@@ -298,6 +299,31 @@ draw_start_message()
         done
     done
     
+    draw_grid
+}
+
+draw_number()
+{
+    eval "number0_arr1=(2 3);  number1_arr1=(2);        number2_arr1=(2 3);      number3_arr1=(2 3);  number4_arr1=(2 3);      number5_arr1=(1 2 3 4)"
+    eval "number0_arr2=(1 4);  number1_arr2=(1 2);      number2_arr2=(1 4);      number3_arr2=(1 4);  number4_arr2=(1 3);      number5_arr2=(1)"
+    eval "number0_arr3=(1 4);  number1_arr3=(2);        number2_arr3=(3);        number3_arr3=(3);    number4_arr3=(1 2 3 4);  number5_arr3=(1 2 3)"
+    eval "number0_arr4=(1 4);  number1_arr4=(2);        number2_arr4=(2);        number3_arr4=(1 4);  number4_arr4=(3);        number5_arr4=(4)"
+    eval "number0_arr5=(2 3);  number1_arr5=(1 2 3);    number2_arr5=(1 2 3 4);  number3_arr5=(2 3);  number4_arr5=(3);        number5_arr5=(1 2 3)"
+
+    for ((i=1; i<=5; i++)); do
+        eval "sub_arr_len=\${#number$1_arr$i[@]}"
+        for ((j=0; j<sub_arr_len; j++)); do
+            eval "num_col=\$((number$1_arr$i[$j]))";
+            eval "arr$(($2+$i))[$(($3+$num_col))]=\"\$4\$pixel\$no_color\"";
+        done
+    done
+}
+
+display_score()
+{
+    clear_grid
+    draw_number "$1" "$(($ball_start_row-2))" "$(($ball_start_col/2+2))" "$ball_color"
+    draw_number "$2" "$(($ball_start_row-2))" "$(($ball_start_col*3/2+2))" "$ball_color"
     draw_grid
 }
 
